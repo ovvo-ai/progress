@@ -73,6 +73,18 @@ tbody tr:last-child td{border-bottom:none}
 td.note{font-family:'Inter',sans-serif;color:var(--muted)}
 .scroll{overflow-x:auto}
 
+.fold{padding:0}
+.fold>summary{list-style:none;cursor:pointer;padding:18px 20px;font-size:17px;font-weight:600;
+  color:var(--ink);display:flex;align-items:center;gap:9px}
+.fold>summary::-webkit-details-marker{display:none}
+.fold>summary::after{content:"";width:8px;height:8px;border-right:2px solid var(--muted);
+  border-bottom:2px solid var(--muted);transform:rotate(45deg) translate(-2px,-2px);
+  margin-left:auto;transition:transform .15s}
+.fold[open]>summary::after{transform:rotate(-135deg) translate(-2px,-2px)}
+.fold>summary:hover::after{border-color:var(--ink)}
+.fold>.scroll{padding:0 20px 18px}
+.count{font-size:12.5px;color:var(--muted);font-weight:400}
+
 footer{text-align:center;font-size:11px;color:var(--muted-2);margin:22px 0 8px;line-height:1.6}
 .gate{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:26px 20px;text-align:center;max-width:520px;margin:60px auto}
 .gate h2{font-size:16px;margin:0 0 8px}
@@ -125,10 +137,10 @@ footer{text-align:center;font-size:11px;color:var(--muted-2);margin:22px 0 8px;l
     <p class="caption">Červená čiara = 102 cm, klinická hranica kardiometabolického rizika.</p>
   </section>
 
-  <section class="card">
-    <h2>História záznamov</h2>
+  <details class="card fold">
+    <summary>História záznamov <span class="count" id="hcount"></span></summary>
     <div class="scroll"><table class="mono" id="table"></table></div>
-  </section>
+  </details>
 
   <footer id="footer"></footer>
 </div>
@@ -434,6 +446,10 @@ function render(){
       return "<tr><td>"+fmtDate(e.date)+"</td><td>"+num(e.weight,1)+"</td><td>"+num(e.waist,0)+
              "</td><td>"+num(e.neck,0)+'</td><td class="note">'+(e.note||"")+"</td></tr>";
     }).join("") + "</tbody>";
+
+  var n = rows.length;
+  document.getElementById("hcount").textContent =
+    n + (n === 1 ? " záznam" : (n >= 2 && n <= 4) ? " záznamy" : " záznamov");
 
   document.getElementById("footer").innerHTML =
     "Dáta sú zašifrované a čitateľné len s tvojím kľúčom z adresy. Nové hodnoty pridávaš tak, že ich napíšeš Claudovi v projekte JAKUB.<br>" +
