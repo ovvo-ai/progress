@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="sk" data-theme-pref="auto">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#f9f9f7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0d0d0d" media="(prefers-color-scheme: dark)">
+<title>Denník postupu</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📉</text></svg>">
+<style>
+:root{
+  color-scheme: light;
+  --page:#f9f9f7; --surface:#fcfcfb;
+  --ink:#0b0b0b; --ink-2:#52514e; --ink-muted:#898781;
+  --grid:#e1e0d9; --axis:#c3c2b7; --border:rgba(11,11,11,0.10);
+  --series-1:#2a78d6; --band:rgba(42,120,214,0.10); --band-line:rgba(42,120,214,0.28);
+  --good:#006300; --critical:#d03b3b; --warning:#fab219;
+  --radius:14px;
+}
+@media (prefers-color-scheme: dark){
+  :root:where(:not([data-theme-pref="light"])){
+    color-scheme: dark;
+    --page:#0d0d0d; --surface:#1a1a19;
+    --ink:#ffffff; --ink-2:#c3c2b7; --ink-muted:#898781;
+    --grid:#2c2c2a; --axis:#383835; --border:rgba(255,255,255,0.10);
+    --series-1:#3987e5; --band:rgba(57,135,229,0.14); --band-line:rgba(57,135,229,0.34);
+    --good:#0ca30c; --critical:#d03b3b; --warning:#fab219;
+  }
+}
+:root[data-theme-pref="dark"]{
+  color-scheme: dark;
+  --page:#0d0d0d; --surface:#1a1a19;
+  --ink:#ffffff; --ink-2:#c3c2b7; --ink-muted:#898781;
+  --grid:#2c2c2a; --axis:#383835; --border:rgba(255,255,255,0.10);
+  --series-1:#3987e5; --band:rgba(57,135,229,0.14); --band-line:rgba(57,135,229,0.34);
+  --good:#0ca30c; --critical:#d03b3b; --warning:#fab219;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--page); color:var(--ink);
+  font-family:system-ui,-apple-system,"Segoe UI",sans-serif;
+  font-size:15px; line-height:1.5;
+  padding:16px 14px calc(40px + env(safe-area-inset-bottom));
+  max-width:900px; margin:0 auto;
+  -webkit-text-size-adjust:100%;
+}
+header{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:4px}
+h1{font-size:19px;font-weight:650;margin:0;letter-spacing:-0.01em}
+.updated{font-size:12px;color:var(--ink-muted);white-space:nowrap}
+.themebtn{
+  appearance:none;background:transparent;border:1px solid var(--border);color:var(--ink-2);
+  border-radius:999px;font:inherit;font-size:12px;padding:3px 10px;cursor:pointer;
+}
+.themebtn:hover{border-color:var(--axis)}
+
+.tiles{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:16px 0 20px}
+@media(min-width:620px){.tiles{grid-template-columns:repeat(4,1fr)}}
+.tile{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 13px}
+.tile .lbl{font-size:11.5px;color:var(--ink-muted);text-transform:uppercase;letter-spacing:.05em;font-weight:600}
+.tile .val{font-size:27px;font-weight:640;letter-spacing:-0.02em;margin-top:5px;line-height:1.1}
+.tile .val .u{font-size:14px;font-weight:500;color:var(--ink-2);margin-left:2px;letter-spacing:0}
+.tile .sub{font-size:12.5px;color:var(--ink-2);margin-top:3px}
+.tile .sub.good{color:var(--good);font-weight:600}
+.tile .sub.bad{color:var(--critical);font-weight:600}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 12px 8px;margin-bottom:16px}
+.card h2{font-size:14.5px;font-weight:640;margin:0 0 2px 2px;letter-spacing:-0.005em}
+.card .note{font-size:12.5px;color:var(--ink-muted);margin:0 0 10px 2px}
+.keys{display:flex;flex-wrap:wrap;gap:14px;margin:2px 2px 10px;font-size:12px;color:var(--ink-2)}
+.keys span{display:inline-flex;align-items:center;gap:6px}
+.swatch{width:12px;height:12px;border-radius:3px;flex:none}
+.swatch.line{height:3px;border-radius:2px;background:var(--series-1)}
+.swatch.band{background:var(--band);border:1px solid var(--band-line)}
+.swatch.ref{height:0;border-top:2px dashed var(--critical);width:14px}
+
+figure{margin:0;position:relative}
+svg{display:block;width:100%;height:auto;overflow:visible;touch-action:pan-y}
+.tt{
+  position:absolute;pointer-events:none;opacity:0;transition:opacity .1s;
+  background:var(--surface);border:1px solid var(--border);border-radius:9px;
+  padding:7px 10px;font-size:12.5px;color:var(--ink);white-space:nowrap;
+  box-shadow:0 6px 20px rgba(0,0,0,.13);z-index:5;
+}
+.tt b{font-weight:640}
+.tt .d{color:var(--ink-muted);font-size:11.5px;display:block;margin-bottom:1px}
+
+details{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:0 14px;margin-bottom:16px}
+details summary{cursor:pointer;padding:12px 0;font-size:14px;font-weight:600;list-style:none}
+details summary::-webkit-details-marker{display:none}
+details summary::before{content:"▸ ";color:var(--ink-muted)}
+details[open] summary::before{content:"▾ "}
+table{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums;margin-bottom:12px}
+th,td{text-align:right;padding:7px 4px;border-bottom:1px solid var(--grid)}
+th:first-child,td:first-child{text-align:left}
+th{color:var(--ink-muted);font-weight:600;font-size:11.5px;text-transform:uppercase;letter-spacing:.04em}
+tbody tr:last-child td{border-bottom:none}
+
+footer{font-size:12px;color:var(--ink-muted);text-align:center;margin-top:22px;line-height:1.6}
+.err{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:22px 18px;text-align:center}
+.err h2{margin:0 0 8px;font-size:16px}
+.err p{margin:0;color:var(--ink-2);font-size:13.5px}
+.hidden{display:none}
+</style>
+</head>
+<body>
+
+<div id="gate" class="err hidden">
+  <h2>Chýba dešifrovací kľúč</h2>
+  <p>Táto stránka je zašifrovaná. Otvor ju cez svoju uloženú záložku — musí obsahovať kľúč za znakom <code>#</code> na konci adresy.</p>
+</div>
+
+<div id="app" class="hidden">
+  <header>
+    <h1>Denník postupu</h1>
+    <button class="themebtn" id="themebtn" type="button">tmavý režim</button>
+  </header>
+  <div class="updated" id="updated"></div>
+
+  <div class="tiles" id="tiles"></div>
+
+  <div class="card">
+    <h2>Váha</h2>
+    <p class="note" id="wnote"></p>
+    <div class="keys">
+      <span><i class="swatch line"></i>nameraná váha</span>
+      <span><i class="swatch band"></i>cieľové pásmo 0,3–0,9 kg/týždeň</span>
+    </div>
+    <figure><svg id="chart-weight" role="img" aria-label="Vývoj váhy v čase"></svg><div class="tt" id="tt-weight"></div></figure>
+  </div>
+
+  <div class="card">
+    <h2>Obvod pása</h2>
+    <p class="note">Kľúčový ukazovateľ viscerálneho a pečeňového tuku — dôležitejší než samotná váha.</p>
+    <div class="keys">
+      <span><i class="swatch line"></i>obvod pása</span>
+      <span><i class="swatch ref"></i>hranica rizika 102 cm</span>
+    </div>
+    <figure><svg id="chart-waist" role="img" aria-label="Vývoj obvodu pása v čase"></svg><div class="tt" id="tt-waist"></div></figure>
+  </div>
+
+  <details>
+    <summary>Všetky merania</summary>
+    <table id="table"></table>
+  </details>
+
+  <footer>
+    Dáta sú v repozitári uložené zašifrované; kľúč je súčasťou tvojej adresy a na server sa neodosiela.<br>
+    Nové hodnoty pridávaš tak, že ich napíšeš Claudovi v projekte JAKUB.
+  </footer>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ---------- theme ---------- */
+var pref = "auto";
+try { pref = localStorage.getItem("denik-theme") || "auto"; } catch(e){}
+function applyTheme(){
+  document.documentElement.setAttribute("data-theme-pref", pref);
+  var dark = pref === "dark" || (pref === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
+  var b = document.getElementById("themebtn");
+  if (b) b.textContent = dark ? "svetlý režim" : "tmavý režim";
+}
+applyTheme();
+document.getElementById("themebtn").addEventListener("click", function(){
+  var dark = pref === "dark" || (pref === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
+  pref = dark ? "light" : "dark";
+  try { localStorage.setItem("denik-theme", pref); } catch(e){}
+  applyTheme(); redraw();
+});
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", function(){ applyTheme(); redraw(); });
+
+/* ---------- decrypt ---------- */
+function b64uToBytes(s){
+  s = s.replace(/-/g,"+").replace(/_/g,"/");
+  while (s.length % 4) s += "=";
+  var bin = atob(s), out = new Uint8Array(bin.length);
+  for (var i=0;i<bin.length;i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+function getKey(){
+  var h = location.hash.replace(/^#/, "");
+  var m = /(?:^|&)k=([A-Za-z0-9\-_]+)/.exec(h);
+  return m ? m[1] : null;
+}
+var DATA = null;
+
+function fail(title, msg){
+  var g = document.getElementById("gate");
+  g.querySelector("h2").textContent = title;
+  g.querySelector("p").textContent = msg;
+  g.classList.remove("hidden");
+  document.getElementById("app").classList.add("hidden");
+}
+
+async function boot(){
+  var kb64 = getKey();
+  if (!kb64){ document.getElementById("gate").classList.remove("hidden"); return; }
+  var payload;
+  try {
+    var res = await fetch("data.json", {cache:"no-store"});
+    if (!res.ok) throw new Error(res.status);
+    payload = await res.json();
+  } catch(e){
+    return fail("Dáta sa nenačítali", "Súbor s meraniami sa nepodarilo stiahnuť. Skús stránku načítať znova o chvíľu.");
+  }
+  try{
+    var key = await crypto.subtle.importKey("raw", b64uToBytes(kb64), {name:"AES-GCM"}, false, ["decrypt"]);
+    var plain = await crypto.subtle.decrypt(
+      {name:"AES-GCM", iv: b64uToBytes(payload.iv)}, key, b64uToBytes(payload.ct)
+    );
+    DATA = JSON.parse(new TextDecoder().decode(plain));
+  } catch(e){
+    return fail("Nesprávny kľúč", "Kľúč v adrese nesedí k týmto dátam. Skontroluj, či si použil svoju pôvodnú záložku celú, aj s časťou za znakom #.");
+  }
+  document.getElementById("app").classList.remove("hidden");
+  render();
+}
+
+/* ---------- helpers ---------- */
+var MON = ["jan","feb","mar","apr","máj","jún","júl","aug","sep","okt","nov","dec"];
+function pd(s){ var p = s.split("-"); return new Date(+p[0], +p[1]-1, +p[2]); }
+function fmtD(d){ return d.getDate()+". "+MON[d.getMonth()]; }
+function fmtDL(d){ return d.getDate()+". "+MON[d.getMonth()]+" "+d.getFullYear(); }
+function nf(v, dec){
+  if (v === null || v === undefined || isNaN(v)) return "–";
+  return v.toFixed(dec).replace(".", ",");
+}
+function sgn(v, dec, unit){
+  if (v === null || isNaN(v)) return "–";
+  var s = v > 0 ? "+" : v < 0 ? "−" : "";
+  return s + Math.abs(v).toFixed(dec).replace(".",",") + (unit ? " "+unit : "");
+}
+var DAY = 86400000;
+
+/* US Navy, muži: %BF = 86.010*log10(pás−krk [in]) − 70.041*log10(výška [in]) + 36.76 */
+function navyBF(waistCm, neckCm, heightCm){
+  if (!waistCm || !neckCm || !heightCm) return null;
+  var d = (waistCm - neckCm) / 2.54, h = heightCm / 2.54;
+  if (d <= 0) return null;
+  var v = 86.010*Math.log10(d) - 70.041*Math.log10(h) + 36.76;
+  return (v > 0 && v < 70) ? v : null;
+}
+
+function prep(){
+  var H = DATA.profile.heightCm;
+  var rows = DATA.entries.slice().sort(function(a,b){ return a.date < b.date ? -1 : 1; });
+  var lastNeck = null;
+  rows.forEach(function(r){
+    r.d = pd(r.date);
+    if (r.neck != null) lastNeck = r.neck;
+    r.neckEff = r.neck != null ? r.neck : lastNeck;
+    r.bf = navyBF(r.waist, r.neckEff, H);
+  });
+  return rows;
+}
+
+/* lineárna regresia (kg/týždeň) cez posledných ~21 dní */
+function trendPerWeek(pts){
+  if (pts.length < 2) return null;
+  var last = pts[pts.length-1].x;
+  var w = pts.filter(function(p){ return last - p.x <= 24*DAY; });
+  if (w.length < 2) w = pts.slice(-3);
+  if (w.length < 2) return null;
+  var n=w.length, sx=0, sy=0, sxy=0, sxx=0;
+  w.forEach(function(p){ var x=p.x/DAY; sx+=x; sy+=p.y; sxy+=x*p.y; sxx+=x*x; });
+  var den = n*sxx - sx*sx;
+  if (Math.abs(den) < 1e-9) return null;
+  return ((n*sxy - sx*sy)/den) * 7;
+}
+
+/* ---------- chart ---------- */
+function niceTicks(min, max, count){
+  var span = max - min;
+  if (span <= 0) span = Math.abs(max) * 0.1 || 1;
+  var raw = span / count;
+  var mag = Math.pow(10, Math.floor(Math.log10(raw)));
+  var norm = raw / mag, step;
+  if (norm <= 1) step = 1; else if (norm <= 2) step = 2; else if (norm <= 2.5) step = 2.5;
+  else if (norm <= 5) step = 5; else step = 10;
+  step *= mag;
+  var out = [], t = Math.ceil(min/step)*step;
+  for (; t <= max + step*0.001; t += step) out.push(Math.round(t/step)*step);
+  return out;
+}
+
+function drawLine(opts){
+  var svg = document.getElementById(opts.svgId);
+  var tip = document.getElementById(opts.ttId);
+  var pts = opts.points;
+  svg.textContent = "";
+  if (!pts.length){
+    svg.setAttribute("viewBox","0 0 600 80");
+    var t = mk("text", {x:300, y:46, "text-anchor":"middle", fill:"var(--ink-muted)", "font-size":"14"});
+    t.textContent = "Zatiaľ žiadne merania";
+    svg.appendChild(t); return;
+  }
+
+  var wrap = svg.parentNode;
+  var W = Math.max(300, wrap.clientWidth || 600), H = opts.height || 230;
+  var mobile = W < 430;
+  var m = {t:14, r:mobile?12:16, b:26, l:mobile?34:40};
+  svg.setAttribute("viewBox", "0 0 "+W+" "+H);
+  svg.setAttribute("height", H);
+
+  var xs = pts.map(function(p){return p.x;});
+  if (opts.band) opts.band.forEach(function(b){ xs.push(b.x); });
+  var x0 = Math.min.apply(null, xs), x1 = Math.max.apply(null, xs);
+  if (x1 - x0 < DAY*6){ var mid=(x0+x1)/2; x0 = mid - DAY*3.5; x1 = mid + DAY*3.5; }
+  var pad = (x1-x0)*0.06; x0 -= pad; x1 += pad;
+
+  var vals = pts.map(function(p){return p.y;});
+  if (opts.band) opts.band.forEach(function(b){ vals.push(b.lo, b.hi); });
+  if (opts.refLine != null) vals.push(opts.refLine);
+  var y0 = Math.min.apply(null, vals), y1 = Math.max.apply(null, vals);
+  var ySpan = y1 - y0; if (ySpan < 1.2) { var ym=(y0+y1)/2; y0 = ym-0.8; y1 = ym+0.8; ySpan = y1-y0; }
+  y0 -= ySpan*0.16; y1 += ySpan*0.16;
+
+  var X = function(v){ return m.l + (v - x0)/(x1 - x0) * (W - m.l - m.r); };
+  var Y = function(v){ return m.t + (1 - (v - y0)/(y1 - y0)) * (H - m.t - m.b); };
+
+  // grid + y ticks
+  niceTicks(y0, y1, mobile?4:5).forEach(function(v){
+    if (v < y0 || v > y1) return;
+    svg.appendChild(mk("line",{x1:m.l, x2:W-m.r, y1:Y(v), y2:Y(v), stroke:"var(--grid)", "stroke-width":1}));
+    var lb = mk("text",{x:m.l-7, y:Y(v)+4, "text-anchor":"end", fill:"var(--ink-muted)", "font-size":mobile?10:11});
+    lb.textContent = nf(v, opts.dec||0); svg.appendChild(lb);
+  });
+
+  // band (orezané na plochu grafu)
+  if (opts.band && opts.band.length > 1){
+    var cid = opts.svgId + "-clip";
+    var defs = mk("defs", {});
+    var cp = mk("clipPath", {id: cid});
+    cp.appendChild(mk("rect",{x:m.l, y:m.t-2, width:W-m.l-m.r, height:H-m.t-m.b+2}));
+    defs.appendChild(cp); svg.appendChild(defs);
+    var g = mk("g", {"clip-path":"url(#"+cid+")"});
+    var up = opts.band.map(function(b){ return X(b.x)+","+Y(b.hi); }).join(" ");
+    var dn = opts.band.slice().reverse().map(function(b){ return X(b.x)+","+Y(b.lo); }).join(" ");
+    g.appendChild(mk("polygon",{points:up+" "+dn, fill:"var(--band)"}));
+    ["hi","lo"].forEach(function(k){
+      g.appendChild(mk("polyline",{
+        points: opts.band.map(function(b){ return X(b.x)+","+Y(b[k]); }).join(" "),
+        fill:"none", stroke:"var(--band-line)", "stroke-width":1, "stroke-dasharray":"3 3"
+      }));
+    });
+    svg.appendChild(g);
+  }
+
+  // reference line
+  if (opts.refLine != null && opts.refLine >= y0 && opts.refLine <= y1){
+    svg.appendChild(mk("line",{x1:m.l, x2:W-m.r, y1:Y(opts.refLine), y2:Y(opts.refLine),
+      stroke:"var(--critical)", "stroke-width":2, "stroke-dasharray":"5 4", opacity:.75}));
+  }
+
+  // x ticks
+  var showN = mobile ? 3 : 5;
+  var idxs = [];
+  if (pts.length <= showN){ pts.forEach(function(_,i){ idxs.push(i); }); }
+  else { for (var i=0;i<showN;i++) idxs.push(Math.round(i*(pts.length-1)/(showN-1))); }
+  idxs.filter(function(v,i,a){return a.indexOf(v)===i;}).forEach(function(i){
+    var lb = mk("text",{x:X(pts[i].x), y:H-8, "text-anchor":"middle", fill:"var(--ink-muted)", "font-size":mobile?10:11});
+    lb.textContent = fmtD(pts[i].d); svg.appendChild(lb);
+  });
+  svg.appendChild(mk("line",{x1:m.l, x2:W-m.r, y1:H-m.b, y2:H-m.b, stroke:"var(--axis)", "stroke-width":1}));
+
+  // series
+  if (pts.length > 1){
+    svg.appendChild(mk("polyline",{
+      points: pts.map(function(p){ return X(p.x)+","+Y(p.y); }).join(" "),
+      fill:"none", stroke:"var(--series-1)", "stroke-width":2,
+      "stroke-linejoin":"round", "stroke-linecap":"round"
+    }));
+  }
+  pts.forEach(function(p){
+    svg.appendChild(mk("circle",{cx:X(p.x), cy:Y(p.y), r:pts.length>25?3:4.5,
+      fill:"var(--series-1)", stroke:"var(--surface)", "stroke-width":2}));
+  });
+
+  // last value direct label
+  var lastP = pts[pts.length-1];
+  var lx = X(lastP.x), ly = Y(lastP.y);
+  var lab = mk("text",{x: Math.min(lx, W-m.r), y: ly-13, "text-anchor": lx > W-m.r-30 ? "end" : "middle",
+    fill:"var(--ink)", "font-size":12.5, "font-weight":650});
+  lab.textContent = nf(lastP.y, opts.dec||1) + " " + opts.unit;
+  svg.appendChild(lab);
+
+  // hover
+  var hl = mk("line",{x1:0,x2:0,y1:m.t,y2:H-m.b, stroke:"var(--axis)", "stroke-width":1, opacity:0});
+  var hd = mk("circle",{r:6.5, fill:"var(--series-1)", stroke:"var(--surface)", "stroke-width":2.5, opacity:0});
+  svg.appendChild(hl); svg.appendChild(hd);
+  var hit = mk("rect",{x:0,y:0,width:W,height:H, fill:"transparent"});
+  svg.appendChild(hit);
+
+  function move(ev){
+    var r = svg.getBoundingClientRect();
+    var cx = ((ev.touches ? ev.touches[0].clientX : ev.clientX) - r.left) * (W / r.width);
+    var best = pts[0], bd = Infinity;
+    pts.forEach(function(p){ var d = Math.abs(X(p.x)-cx); if (d < bd){ bd = d; best = p; } });
+    var px = X(best.x), py = Y(best.y);
+    hl.setAttribute("x1",px); hl.setAttribute("x2",px); hl.setAttribute("opacity",.6);
+    hd.setAttribute("cx",px); hd.setAttribute("cy",py); hd.setAttribute("opacity",1);
+    tip.innerHTML = "<span class='d'>"+fmtDL(best.d)+"</span><b>"+nf(best.y, opts.dec||1)+" "+opts.unit+"</b>"+
+                    (best.extra ? "<span class='d'>"+best.extra+"</span>" : "");
+    tip.style.opacity = 1;
+    var sc = r.width / W;
+    var tw = tip.offsetWidth;
+    var left = px*sc - tw/2;
+    left = Math.max(2, Math.min(left, r.width - tw - 2));
+    tip.style.left = left+"px";
+    tip.style.top = Math.max(0, py*sc - tip.offsetHeight - 12)+"px";
+  }
+  function out(){ tip.style.opacity = 0; hl.setAttribute("opacity",0); hd.setAttribute("opacity",0); }
+  hit.addEventListener("mousemove", move);
+  hit.addEventListener("mouseleave", out);
+  hit.addEventListener("touchstart", move, {passive:true});
+  hit.addEventListener("touchmove", move, {passive:true});
+  hit.addEventListener("touchend", out);
+}
+
+function mk(tag, attrs){
+  var e = document.createElementNS("http://www.w3.org/2000/svg", tag);
+  for (var k in attrs) e.setAttribute(k, attrs[k]);
+  return e;
+}
+
+/* ---------- render ---------- */
+function render(){
+  var rows = prep();
+  var H = DATA.profile.heightCm;
+
+  var wRows = rows.filter(function(r){ return r.weight != null; });
+  var sRows = rows.filter(function(r){ return r.waist != null; });
+  var bRows = rows.filter(function(r){ return r.bf != null; });
+
+  /* tiles */
+  var tiles = [];
+  var lastW = wRows[wRows.length-1], firstW = wRows[0];
+  if (lastW){
+    var dw = wRows.length > 1 ? lastW.weight - firstW.weight : null;
+    var bmi = lastW.weight / Math.pow(H/100, 2);
+    tiles.push({
+      lbl:"Váha", val:nf(lastW.weight,1), unit:"kg",
+      sub: dw != null ? sgn(dw,1,"kg")+" od začiatku" : "BMI "+nf(bmi,1),
+      cls: dw != null ? (dw < 0 ? "good" : dw > 0 ? "bad" : "") : ""
+    });
+  }
+  var lastS = sRows[sRows.length-1], firstS = sRows[0];
+  if (lastS){
+    var ds = sRows.length > 1 ? lastS.waist - firstS.waist : null;
+    tiles.push({
+      lbl:"Obvod pása", val:nf(lastS.waist,0), unit:"cm",
+      sub: ds != null ? sgn(ds,1,"cm")+" od začiatku" : (lastS.waist > 102 ? "nad hranicou 102 cm" : "pod hranicou 102 cm"),
+      cls: ds != null ? (ds < 0 ? "good" : ds > 0 ? "bad" : "") : ""
+    });
+  }
+  var lastB = bRows[bRows.length-1];
+  if (lastB){
+    var db = bRows.length > 1 ? lastB.bf - bRows[0].bf : null;
+    var fm = lastW ? lastW.weight * lastB.bf/100 : null;
+    tiles.push({
+      lbl:"Telesný tuk", val:nf(lastB.bf,1), unit:"%",
+      sub: db != null ? sgn(db,1,"p.b.")+" od začiatku" : (fm ? "≈ "+nf(fm,1)+" kg tuku" : "US Navy odhad"),
+      cls: db != null ? (db < 0 ? "good" : db > 0 ? "bad" : "") : ""
+    });
+  }
+  var wp = wRows.map(function(r){ return {x:+r.d, y:r.weight}; });
+  var tr = trendPerWeek(wp);
+  tiles.push({
+    lbl:"Tempo", val: tr != null ? sgn(tr,2,"") : "–", unit: tr != null ? "kg/týž" : "",
+    sub: tr == null ? "potrebné aspoň 2 merania"
+       : (tr > -0.3 ? "pomalšie než cieľ" : tr < -0.9 ? "rýchlejšie než cieľ" : "v cieľovom pásme"),
+    cls: tr == null ? "" : (tr <= -0.3 && tr >= -0.9 ? "good" : "")
+  });
+
+  document.getElementById("tiles").innerHTML = tiles.map(function(t){
+    return "<div class='tile'><div class='lbl'>"+t.lbl+"</div>"+
+           "<div class='val'>"+t.val+(t.unit?"<span class='u'>"+t.unit+"</span>":"")+"</div>"+
+           "<div class='sub "+(t.cls||"")+"'>"+t.sub+"</div></div>";
+  }).join("");
+
+  var lastAny = rows[rows.length-1];
+  document.getElementById("updated").textContent = lastAny ? "posledné meranie " + fmtDL(lastAny.d) : "";
+
+  /* weight chart + band */
+  var band = null;
+  if (wRows.length){
+    var t0 = +firstW.d, w0 = firstW.weight;
+    var tEnd = Math.max(+lastAny.d, t0 + 21*DAY);
+    band = [];
+    for (var t = t0; t <= tEnd + DAY; t += DAY*2){
+      var wk = (t - t0)/(7*DAY);
+      band.push({x:t, hi: w0 - 0.3*wk, lo: w0 - 0.9*wk});
+    }
+  }
+  document.getElementById("wnote").textContent =
+    "Cieľ je držať sa v pásme — priemerne −0,5 kg/týždeň. Prvý týždeň býva pokles rýchlejší kvôli vode.";
+
+  drawLine({
+    svgId:"chart-weight", ttId:"tt-weight", unit:"kg", dec:1, band:band,
+    points: wRows.map(function(r){
+      return {x:+r.d, d:r.d, y:r.weight,
+              extra: "BMI "+nf(r.weight/Math.pow(H/100,2),1)};
+    })
+  });
+
+  drawLine({
+    svgId:"chart-waist", ttId:"tt-waist", unit:"cm", dec:1, refLine:102,
+    points: sRows.map(function(r){
+      return {x:+r.d, d:r.d, y:r.waist,
+              extra: r.bf != null ? nf(r.bf,1)+" % tuku" : null};
+    })
+  });
+
+  /* table */
+  var head = "<thead><tr><th>Dátum</th><th>Váha</th><th>Pás</th><th>Krk</th><th>% tuku</th></tr></thead>";
+  var body = rows.slice().reverse().map(function(r){
+    return "<tr><td>"+fmtDL(r.d)+"</td><td>"+nf(r.weight,1)+"</td><td>"+nf(r.waist,1)+
+           "</td><td>"+nf(r.neck,1)+"</td><td>"+nf(r.bf,1)+"</td></tr>";
+  }).join("");
+  document.getElementById("table").innerHTML = head + "<tbody>" + body + "</tbody>";
+}
+
+function redraw(){ if (DATA) render(); }
+var rt; addEventListener("resize", function(){ clearTimeout(rt); rt = setTimeout(redraw, 150); });
+addEventListener("hashchange", function(){ location.reload(); });
+
+boot();
+})();
+</script>
+</body>
+</html>
