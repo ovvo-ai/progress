@@ -91,6 +91,38 @@ footer{text-align:center;font-size:11px;color:var(--muted-2);margin:22px 0 8px;l
 .gate p{margin:0;color:var(--muted);font-size:13px;line-height:1.6}
 .hidden{display:none}
 
+.tabs{display:flex;gap:6px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:5px;margin-bottom:16px}
+.tab{flex:1;appearance:none;background:transparent;border:1px solid transparent;border-radius:10px;padding:10px 8px;
+  color:var(--muted);font-family:'Inter',sans-serif;font-size:13px;font-weight:600;cursor:pointer}
+.tab.active{background:var(--card-2);border-color:var(--band-border);color:var(--ink)}
+
+.dayhead{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:6px}
+.daytitle{font-size:17px;font-weight:600;color:var(--ink)}
+.daysub{font-size:12px;color:var(--muted)}
+.meal{border-top:1px solid var(--line-2);padding:12px 0}
+.meal.first{border-top:0;padding-top:4px}
+.mname{font-size:10.5px;color:var(--accent-2);font-weight:700;letter-spacing:.09em;text-transform:uppercase;margin-bottom:5px}
+.mitems{font-size:13.5px;line-height:1.55;color:var(--ink)}
+.mmac{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--muted);margin-top:6px}
+.dtot{display:flex;gap:14px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:11px;margin-top:2px;
+  font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--muted)}
+.dtot b{color:var(--ink);font-weight:600}
+
+.shop{list-style:none;margin:0;padding:0}
+.shop li{display:flex;align-items:center;gap:11px;padding:10px 0;border-bottom:1px solid var(--line-2);
+  font-size:13.5px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.shop li:last-child{border-bottom:0}
+.box{width:18px;height:18px;border-radius:5px;border:1.5px solid var(--line);flex:none;
+  display:flex;align-items:center;justify-content:center;color:#0E0E0F}
+.box svg{opacity:0}
+.shop li.done{color:var(--muted-2);text-decoration:line-through}
+.shop li.done .box{background:var(--accent);border-color:var(--accent)}
+.shop li.done .box svg{opacity:1}
+.qty{margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--muted);text-align:right}
+.tag{font-size:9.5px;letter-spacing:.06em;color:var(--good);border:1px solid var(--band-border);
+  border-radius:5px;padding:2px 5px;text-transform:uppercase}
+.ul{margin:0;padding-left:18px;font-size:12.5px;color:var(--muted);line-height:1.7}
+
 @media (max-width:720px){
   .stats{grid-template-columns:repeat(2,1fr)}
   .targets{grid-template-columns:repeat(2,1fr)}
@@ -114,6 +146,13 @@ footer{text-align:center;font-size:11px;color:var(--muted-2);margin:22px 0 8px;l
     </div>
   </header>
 
+  <nav class="tabs" id="tabs">
+    <button class="tab active" data-panel="overview" type="button">Prehľad</button>
+    <button class="tab" data-panel="meals" type="button">Jedálniček</button>
+    <button class="tab" data-panel="shop" type="button">Nákup</button>
+  </nav>
+
+  <div id="panel-overview">
   <section class="card">
     <h2>Denný cieľ</h2>
     <div class="targets" id="targets"></div>
@@ -142,6 +181,11 @@ footer{text-align:center;font-size:11px;color:var(--muted-2);margin:22px 0 8px;l
     <div class="scroll"><table class="mono" id="table"></table></div>
   </details>
 
+  </div><!-- /panel-overview -->
+
+  <div id="panel-meals" class="hidden"></div>
+  <div id="panel-shop" class="hidden"></div>
+
   <footer id="footer"></footer>
 </div>
 
@@ -159,6 +203,7 @@ var ICONS = {
   flame:'<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>',
   dumbbell:'<path d="M14.4 14.4 9.6 9.6"/><path d="M18.657 21.485a2 2 0 1 1-2.829-2.828l-1.767 1.768a2 2 0 1 1-2.829-2.829l6.364-6.364a2 2 0 1 1 2.829 2.829l-1.768 1.767a2 2 0 1 1 2.828 2.829z"/><path d="m21.5 21.5-1.4-1.4"/><path d="M3.9 3.9 2.5 2.5"/><path d="M6.404 12.768a2 2 0 1 1-2.829-2.829l1.768-1.767a2 2 0 1 1-2.828-2.829l2.828-2.828a2 2 0 1 1 2.829 2.828l1.767-1.768a2 2 0 1 1 2.829 2.829z"/>',
   droplet:'<path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z"/>',
+  check:'<polyline points="20 6 9 17 4 12"/>',
   wheat:'<path d="M2 22 16 8"/><path d="M3.47 12.53 5 11l1.53 1.53a3.5 3.5 0 0 1 0 4.94L5 19l-1.53-1.53a3.5 3.5 0 0 1 0-4.94Z"/><path d="M7.47 8.53 9 7l1.53 1.53a3.5 3.5 0 0 1 0 4.94L9 15l-1.53-1.53a3.5 3.5 0 0 1 0-4.94Z"/><path d="M11.47 4.53 13 3l1.53 1.53a3.5 3.5 0 0 1 0 4.94L13 11l-1.53-1.53a3.5 3.5 0 0 1 0-4.94Z"/><path d="M20 2h2v2a4 4 0 0 1-4 4h-2V6a4 4 0 0 1 4-4Z"/><path d="M11.47 17.47 13 19l-1.53 1.53a3.5 3.5 0 0 1-4.94 0L5 19l1.53-1.53a3.5 3.5 0 0 1 4.94 0Z"/><path d="M15.47 13.47 17 15l-1.53 1.53a3.5 3.5 0 0 1-4.94 0L9 15l1.53-1.53a3.5 3.5 0 0 1 4.94 0Z"/><path d="M19.47 9.47 21 11l-1.53 1.53a3.5 3.5 0 0 1-4.94 0L13 11l1.53-1.53a3.5 3.5 0 0 1 4.94 0Z"/>'
 };
 function icon(name, size, color){
@@ -210,6 +255,9 @@ async function boot(){
   }
   document.getElementById("app").classList.remove("hidden");
   render();
+  renderMeals();
+  renderShop();
+  initTabs();
 }
 
 /* ---------- pomocné ---------- */
@@ -454,6 +502,126 @@ function render(){
   document.getElementById("footer").innerHTML =
     "Dáta sú zašifrované a čitateľné len s tvojím kľúčom z adresy. Nové hodnoty pridávaš tak, že ich napíšeš Claudovi v projekte JAKUB.<br>" +
     "Výška " + P.height + " cm, štart " + fmtDate(P.startDate) + " · " + num(P.startWeight,1) + " kg.";
+}
+
+/* ---------- jedálniček ---------- */
+function esc(t){ return String(t == null ? "" : t)
+  .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+function mac(m){
+  return num(m.kcal,0)+" kcal · "+num(m.p,1)+" B · "+num(m.f,1)+" T · "+num(m.c,1)+" S";
+}
+function renderMeals(){
+  var host = document.getElementById("panel-meals");
+  var MP = DATA.mealPlan;
+  if (!MP || !MP.days || !MP.days.length){
+    host.innerHTML = '<section class="card"><h2>Jedálniček</h2>' +
+      '<p class="caption">Zatiaľ tu nie je žiadny plán. Napíš Claudovi v projekte a doplní ho sem.</p></section>';
+    return;
+  }
+  var head = '<section class="card"><div class="headrow"><h2>Jedálniček · ' + esc(MP.week || "") + '</h2>' +
+    (MP.updated ? '<div class="daysub mono">aktualizované ' + fmtDate(MP.updated) + '</div>' : '') +
+    '</div>' + (MP.note ? '<p class="caption">' + esc(MP.note) + '</p>' : '');
+  if (MP.average){
+    head += '<div class="dtot" style="margin-top:12px">Priemer dňa: <b>' + mac(MP.average) + '</b></div>';
+  }
+  head += '</section>';
+
+  var days = MP.days.map(function(d){
+    var meals = d.meals.map(function(m, i){
+      return '<div class="meal' + (i === 0 ? ' first' : '') + '">' +
+        '<div class="mname">' + esc(m.name) + '</div>' +
+        '<div class="mitems">' + esc(m.items) + '</div>' +
+        (m.m ? '<div class="mmac">' + mac(m.m) + (m.each ? ' — každé jedlo' : '') + '</div>' : '') +
+        '</div>';
+    }).join("");
+    var t = d.total || null;
+    return '<section class="card">' +
+      '<div class="dayhead"><div class="daytitle">' + esc(d.day) + '</div>' +
+      '<div class="daysub">' + esc(d.title || "") + '</div></div>' +
+      meals +
+      (t ? '<div class="dtot">Deň spolu: <b>' + mac(t) + '</b></div>' : '') +
+      (d.tip ? '<p class="caption">' + esc(d.tip) + '</p>' : '') +
+      '</section>';
+  }).join("");
+
+  var tips = (MP.tips && MP.tips.length)
+    ? '<section class="card"><h2>Poznámky k príprave</h2><ul class="ul">' +
+      MP.tips.map(function(x){ return '<li>' + esc(x) + '</li>'; }).join("") + '</ul></section>'
+    : '';
+
+  host.innerHTML = head + days + tips;
+}
+
+/* ---------- nákup ---------- */
+function shopKey(){ return "shop:" + ((DATA.shopping && DATA.shopping.updated) || "x"); }
+function shopState(){
+  try { return JSON.parse(localStorage.getItem(shopKey()) || "{}"); } catch(e){ return {}; }
+}
+function shopSave(st){ try { localStorage.setItem(shopKey(), JSON.stringify(st)); } catch(e){} }
+
+function renderShop(){
+  var host = document.getElementById("panel-shop");
+  var SH = DATA.shopping;
+  if (!SH || !SH.days || !SH.days.length){
+    host.innerHTML = '<section class="card"><h2>Nákup</h2>' +
+      '<p class="caption">Zatiaľ tu nie je žiadny nákupný zoznam.</p></section>';
+    return;
+  }
+  var st = shopState();
+  function list(items, pref){
+    return '<ul class="shop">' + items.map(function(it, i){
+      var id = pref + ":" + i;
+      return '<li data-id="' + id + '"' + (st[id] ? ' class="done"' : '') + '>' +
+        '<span class="box">' + icon("check", 12, "#0E0E0F") + '</span>' +
+        '<span>' + esc(it.n) + '</span>' +
+        (it.have ? ' <span class="tag">doma</span>' : '') +
+        '<span class="qty">' + esc(it.q) + '</span></li>';
+    }).join("") + '</ul>';
+  }
+
+  var head = '<section class="card"><div class="headrow"><h2>Nákup po dňoch</h2>' +
+    (SH.updated ? '<div class="daysub mono">aktualizované ' + fmtDate(SH.updated) + '</div>' : '') +
+    '</div>' + (SH.note ? '<p class="caption">' + esc(SH.note) + '</p>' : '') + '</section>';
+
+  var days = SH.days.map(function(d, di){
+    return '<section class="card"><div class="dayhead"><div class="daytitle">' + esc(d.day) + '</div></div>' +
+      list(d.items, "d" + di) + '</section>';
+  }).join("");
+
+  var tot = (SH.totals && SH.totals.length)
+    ? '<details class="card fold"><summary>Spolu za celý týždeň <span class="count">' +
+      SH.totals.length + ' položiek</span></summary><div style="padding:0 20px 18px">' +
+      list(SH.totals, "tot") + '</div></details>'
+    : '';
+
+  host.innerHTML = head + days + tot;
+
+  host.querySelectorAll(".shop li").forEach(function(li){
+    li.addEventListener("click", function(){
+      var id = li.getAttribute("data-id"), s2 = shopState();
+      if (s2[id]) delete s2[id]; else s2[id] = 1;
+      shopSave(s2);
+      li.classList.toggle("done");
+    });
+  });
+}
+
+/* ---------- záložky ---------- */
+function initTabs(){
+  var tabs = document.getElementById("tabs");
+  tabs.addEventListener("click", function(ev){
+    var b = ev.target.closest(".tab");
+    if (!b) return;
+    var name = b.getAttribute("data-panel");
+    Array.prototype.forEach.call(tabs.querySelectorAll(".tab"), function(x){
+      x.classList.toggle("active", x === b);
+    });
+    ["overview","meals","shop"].forEach(function(n){
+      document.getElementById("panel-" + n).classList.toggle("hidden", n !== name);
+    });
+    if (name === "overview") render();
+    scrollTo(0, 0);
+  });
 }
 
 var rt;
