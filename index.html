@@ -579,7 +579,7 @@ function renderShop(){
     }).join("") + '</ul>';
   }
 
-  var head = '<section class="card"><div class="headrow"><h2>Nákup po dňoch</h2>' +
+  var head = '<section class="card"><div class="headrow"><h2>' + esc(SH.title || "Nákup") + '</h2>' +
     (SH.updated ? '<div class="daysub mono">aktualizované ' + fmtDate(SH.updated) + '</div>' : '') +
     '</div>' + (SH.note ? '<p class="caption">' + esc(SH.note) + '</p>' : '') + '</section>';
 
